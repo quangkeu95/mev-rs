@@ -11,4 +11,11 @@ license = "MIT OR Apache-2.0"
 homepage = "https://github.com/quangkeu95/mev-rs"
 repository = "https://github.com/quangkeu95/mev-rs"
 
-[dependencies]
+[workspace.dependencies]
+tracing = "0.1.37"
+tracing-subscriber = "0.3.17"
+tokio = { version = "1.32.0", features = ["full"]}
+futures = "0.3.28"
+async-trait = "0.1.73"
+anyhow = "1.0.75"
+
