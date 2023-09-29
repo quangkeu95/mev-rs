@@ -12,10 +12,20 @@ homepage = "https://github.com/quangkeu95/mev-rs"
 repository = "https://github.com/quangkeu95/mev-rs"
 
 [workspace.dependencies]
+# tracing
 tracing = "0.1.37"
 tracing-subscriber = "0.3.17"
+
+# tokio and async 
 tokio = { version = "1.32.0", features = ["full"]}
 futures = "0.3.28"
+
+# jsonrpc
+jsonrpsee = { version = "0.20" }
+jsonrpsee-core = { version = "0.20" }
+jsonrpsee-types = { version = "0.20" }
+
+# misc
 async-trait = "0.1.73"
 anyhow = "1.0.75"
-
+derive_more = "0.99.17"
