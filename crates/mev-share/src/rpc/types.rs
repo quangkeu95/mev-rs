@@ -1,4 +1,4 @@
-use alloy_primitives::{Bytes, TxHash, B256};
+use alloy_primitives::{Address, Bytes, B256};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize)]
@@ -6,8 +6,9 @@ pub struct Bundle {
     pub version: String,
     pub inclusion: BundleInclusion,
     pub body: Vec<BundleBody>,
-    pub validity: Option<BundleValidity>,
+    pub validity: BundleValidity,
     pub privacy: Option<BundlePrivacy>,
+    pub metadata: Option<BundleMetadata>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -19,7 +20,7 @@ pub struct BundleInclusion {
 
 #[derive(Debug, Deserialize)]
 pub struct BundleBody {
-    pub hash: Option<TxHash>,
+    pub hash: Option<B256>,
     pub tx: Option<Bytes>,
     #[serde(alias = "canRevert")]
     pub can_revert: Option<bool>,
@@ -47,7 +48,7 @@ pub struct RefundConstraint {
 #[derive(Debug, Deserialize)]
 pub struct RefundConfig {
     /// Address which receives the portion of the refund.
-    pub address: B256,
+    pub address: Address,
     /// Percentage of refund to pay to the address.
     pub percent: u64,
 }
@@ -59,6 +60,16 @@ pub struct BundlePrivacy {
     pub hints: Vec<Hint>,
     /// Builders that have permission to receive this bundle and include it in a block.
     pub builders: Vec<String>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BundleMetadata {
+    pub bundle_hash: Bytes,
+    pub body_hashes: Vec<Bytes>,
+    pub signer: Address,
+    pub origin_id: String,
+    pub received_at: u64,
 }
 
 #[derive(Debug, Deserialize, strum::Display)]
