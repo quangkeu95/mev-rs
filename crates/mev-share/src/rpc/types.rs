@@ -1,4 +1,5 @@
-use alloy_primitives::{Address, Bytes, B256};
+use alloy_primitives::{Address, Bytes, B256, U256};
+use ethers::types::Log;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize)]
@@ -87,10 +88,29 @@ pub enum Hint {
 pub struct BundleHash {}
 
 #[derive(Debug, Serialize, Clone)]
-pub struct SendBundleResponse {}
+#[serde(rename_all(serialize = "camelCase"))]
+pub struct SendBundleResponse {
+    pub bundle_hash: B256,
+}
 
 #[derive(Debug, Serialize, Clone)]
-pub struct SimulateBundleResponse {}
+#[serde(rename_all(serialize = "camelCase"))]
+pub struct SimulateBundleResponse {
+    pub success: bool,
+    pub error: String,
+    pub state_block: u64,
+    pub mev_gas_price: U256,
+    pub profit: U256,
+    pub refundable_value: U256,
+    pub gas_used: u64,
+    pub body_logs: Vec<SimulateMevBodyLog>,
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub struct SimulateMevBodyLog {
+    pub tx_logs: Vec<Log>,
+    pub bundle_logs: Vec<SimulateMevBodyLog>,
+}
 
 #[derive(Debug, Serialize, Clone)]
 pub struct CancelBundleResponse {}

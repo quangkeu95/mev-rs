@@ -32,6 +32,9 @@ serde_json = { version = "1.0" }
 # alloy
 alloy-primitives = { version = "0.4.0" }
 
+# ethers
+ethers = { version = "2.0" }
+
 # misc
 async-trait = "0.1.73"
 anyhow = "1.0.75"
