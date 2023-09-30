@@ -87,13 +87,13 @@ pub enum Hint {
 #[derive(Debug, Deserialize)]
 pub struct BundleHash {}
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, Clone, Default)]
 #[serde(rename_all(serialize = "camelCase"))]
 pub struct SendBundleResponse {
     pub bundle_hash: B256,
 }
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, Clone, Default)]
 #[serde(rename_all(serialize = "camelCase"))]
 pub struct SimulateBundleResponse {
     pub success: bool,
@@ -112,5 +112,5 @@ pub struct SimulateMevBodyLog {
     pub bundle_logs: Vec<SimulateMevBodyLog>,
 }
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, Clone, Default)]
 pub struct CancelBundleResponse {}
