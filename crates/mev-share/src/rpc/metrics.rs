@@ -6,7 +6,7 @@ use jsonrpsee::{
         HttpRequest, Logger as JsonrpseeLogger, MethodKind, Params, TransportProtocol,
     },
 };
-use tracing::info;
+use tracing::{info, trace};
 
 #[derive(Clone)]
 pub struct RpcServerMetrics {}
@@ -28,7 +28,8 @@ impl JsonrpseeLogger for RpcServerMetrics {
     }
 
     fn on_request(&self, transport: TransportProtocol) -> Self::Instant {
-        todo!()
+        trace!("[RpcServer::on_request] transport {:?}", transport);
+        Instant::now()
     }
 
     fn on_call(
@@ -38,7 +39,6 @@ impl JsonrpseeLogger for RpcServerMetrics {
         kind: MethodKind,
         transport: TransportProtocol,
     ) {
-        todo!()
     }
 
     fn on_result(
@@ -48,14 +48,9 @@ impl JsonrpseeLogger for RpcServerMetrics {
         started_at: Self::Instant,
         transport: TransportProtocol,
     ) {
-        todo!()
     }
 
-    fn on_response(&self, result: &str, started_at: Self::Instant, transport: TransportProtocol) {
-        todo!()
-    }
+    fn on_response(&self, result: &str, started_at: Self::Instant, transport: TransportProtocol) {}
 
-    fn on_disconnect(&self, _remote_addr: std::net::SocketAddr, transport: TransportProtocol) {
-        todo!()
-    }
+    fn on_disconnect(&self, _remote_addr: std::net::SocketAddr, transport: TransportProtocol) {}
 }
