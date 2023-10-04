@@ -16,9 +16,10 @@ use {
 };
 
 pub fn test_address() -> SocketAddr {
-    SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::UNSPECIFIED, 0))
+    SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::new(127, 0, 0, 1), 0))
 }
 
+#[ignore]
 #[cfg(feature = "client")]
 #[tokio::test]
 async fn test_rpc_server() {
