@@ -14,7 +14,7 @@ MEV Share node implementation
 
 [dependencies]
 tracing = { workspace = true }
-tracing-subscriber = { workspace = true }
+tracing-subscriber = { workspace = true, features = ["env-filter", "fmt"] }
 tokio = { workspace = true }
 anyhow = { workspace = true }
 derive_more = { workspace =true }

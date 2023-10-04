@@ -6,8 +6,8 @@ use super::types::{
     Bundle, BundleHash, CancelBundleResponse, SendBundleResponse, SimulateBundleResponse,
 };
 
-#[rpc(server, namespace = "mev")]
-#[cfg_attr(feature = "client", rpc(client, namespace = "mev"))]
+#[cfg_attr(not(feature = "client"), rpc(server, namespace = "mev"))]
+#[cfg_attr(feature = "client", rpc(server, client, namespace = "mev"))]
 pub trait MevShareApi {
     #[method(name = "sendBundle")]
     async fn send_bundle(&self, bundle: Bundle) -> RpcResult<SendBundleResponse>;

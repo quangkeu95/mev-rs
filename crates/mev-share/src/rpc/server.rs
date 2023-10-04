@@ -1,6 +1,6 @@
 use alloy_primitives::B256;
 use async_trait::async_trait;
-use jsonrpsee::server::Server;
+use jsonrpsee::server::{Server, ServerHandle};
 use jsonrpsee_core::RpcResult;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use tracing::info;
@@ -19,23 +19,18 @@ impl RpcServer {
         Self {}
     }
 
-    /// Start RPC server
-    pub async fn run(
-        self,
-        socket_addr: SocketAddr,
-        metrics: RpcServerMetrics,
-    ) -> anyhow::Result<()> {
-        let server = Server::builder()
-            .set_logger(metrics)
-            .build(socket_addr)
-            .await?;
+    // pub async fn run(self, socket_addr: SocketAddr, metrics: RpcServerMetrics) -> ServerHandle {
+    //     let server = Server::builder()
+    //         .set_logger(metrics)
+    //         .build(socket_addr)
+    //         .await?;
 
-        let handle = server.start(self.into_rpc());
-        info!("rpc server started at {}", socket_addr);
+    //     let handle = server.start(self.into_rpc());
+    //     info!("rpc server started at {}", socket_addr);
 
-        handle.stopped().await;
-        Ok(())
-    }
+    //     handle.stopped().await;
+    //     Ok(())
+    // }
 }
 
 #[async_trait]
@@ -50,3 +45,5 @@ impl MevShareApiServer for RpcServer {
         Ok(CancelBundleResponse::default())
     }
 }
+
+// pub fn start_rpc_server(rpc_server: RpcServer, socket_addr: SocketAddr, metrics: RpcServerMetrics)

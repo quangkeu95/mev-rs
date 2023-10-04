@@ -2,7 +2,8 @@ use alloy_primitives::{Address, Bytes, B256, U256};
 use ethers::types::Log;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Default)]
+#[cfg_attr(feature = "client", derive(Serialize))]
 pub struct Bundle {
     pub version: String,
     pub inclusion: BundleInclusion,
@@ -12,7 +13,8 @@ pub struct Bundle {
     pub metadata: Option<BundleMetadata>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Default)]
+#[cfg_attr(feature = "client", derive(Serialize))]
 pub struct BundleInclusion {
     pub block: u64,
     #[serde(alias = "maxBlock")]
@@ -20,6 +22,7 @@ pub struct BundleInclusion {
 }
 
 #[derive(Debug, Deserialize)]
+#[cfg_attr(feature = "client", derive(Serialize))]
 pub struct BundleBody {
     pub hash: Option<B256>,
     pub tx: Option<Bytes>,
@@ -28,7 +31,8 @@ pub struct BundleBody {
     pub bundle: Option<Bundle>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Default)]
+#[cfg_attr(feature = "client", derive(Serialize))]
 pub struct BundleValidity {
     /// Specifies the minimum percent of a given bundle's earnings to redistribute for it to be included in a builder's block.
     pub refund: Vec<RefundConstraint>,
@@ -38,6 +42,7 @@ pub struct BundleValidity {
 }
 
 #[derive(Debug, Deserialize)]
+#[cfg_attr(feature = "client", derive(Serialize))]
 pub struct RefundConstraint {
     /// Index of the entry in body to which the refund percentage applies.
     #[serde(alias = "bodyIdx")]
@@ -47,6 +52,7 @@ pub struct RefundConstraint {
 }
 
 #[derive(Debug, Deserialize)]
+#[cfg_attr(feature = "client", derive(Serialize))]
 pub struct RefundConfig {
     /// Address which receives the portion of the refund.
     pub address: Address,
@@ -56,6 +62,7 @@ pub struct RefundConfig {
 
 /// Preferences on what data should be shared about the bundle and its transactions.
 #[derive(Debug, Deserialize)]
+#[cfg_attr(feature = "client", derive(Serialize))]
 pub struct BundlePrivacy {
     /// Each item additively specifies which data about all transactions in the bundle to share. If no hints are specified, no data is shared. Transactions from other users that do not specify the same hints will not share additional information.
     pub hints: Vec<Hint>,
@@ -64,6 +71,7 @@ pub struct BundlePrivacy {
 }
 
 #[derive(Debug, Deserialize)]
+#[cfg_attr(feature = "client", derive(Serialize))]
 #[serde(rename_all = "camelCase")]
 pub struct BundleMetadata {
     pub bundle_hash: Bytes,
@@ -74,6 +82,7 @@ pub struct BundleMetadata {
 }
 
 #[derive(Debug, Deserialize, strum::Display)]
+#[cfg_attr(feature = "client", derive(Serialize))]
 #[strum(serialize_all = "snake_case")]
 pub enum Hint {
     Calldata,
@@ -87,14 +96,14 @@ pub enum Hint {
 #[derive(Debug, Deserialize)]
 pub struct BundleHash {}
 
-#[derive(Debug, Serialize, Clone, Default)]
-#[serde(rename_all(serialize = "camelCase"))]
+#[derive(Debug, Deserialize, Serialize, Clone, Default)]
+#[serde(rename_all = "camelCase")]
 pub struct SendBundleResponse {
     pub bundle_hash: B256,
 }
 
-#[derive(Debug, Serialize, Clone, Default)]
-#[serde(rename_all(serialize = "camelCase"))]
+#[derive(Debug, Deserialize, Serialize, Clone, Default)]
+#[serde(rename_all = "camelCase")]
 pub struct SimulateBundleResponse {
     pub success: bool,
     pub error: String,
@@ -106,11 +115,11 @@ pub struct SimulateBundleResponse {
     pub body_logs: Vec<SimulateMevBodyLog>,
 }
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct SimulateMevBodyLog {
     pub tx_logs: Vec<Log>,
     pub bundle_logs: Vec<SimulateMevBodyLog>,
 }
 
-#[derive(Debug, Serialize, Clone, Default)]
+#[derive(Debug, Deserialize, Serialize, Clone, Default)]
 pub struct CancelBundleResponse {}
