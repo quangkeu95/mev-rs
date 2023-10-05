@@ -1,6 +1,10 @@
-use alloy_primitives::{Address, Bytes, B256, U256};
+// use alloy_primitives::{Address, Bytes, B256, U256};
 use ethers::types::Log;
+use ethers::types::{Bytes, H160, H256, U256};
 use serde::{Deserialize, Serialize};
+
+pub type Address = H160;
+// pub type B256 = H256;
 
 #[derive(Debug, Deserialize, Default)]
 #[cfg_attr(feature = "client", derive(Serialize))]
@@ -24,11 +28,11 @@ pub struct BundleInclusion {
 #[derive(Debug, Deserialize)]
 #[cfg_attr(feature = "client", derive(Serialize))]
 pub struct BundleBody {
-    pub hash: Option<B256>,
+    pub hash: Option<H256>,
     pub tx: Option<Bytes>,
+    pub bundle: Option<Bundle>,
     #[serde(alias = "canRevert")]
     pub can_revert: Option<bool>,
-    pub bundle: Option<Bundle>,
 }
 
 #[derive(Debug, Deserialize, Default)]
@@ -93,13 +97,12 @@ pub enum Hint {
     TxHash,
 }
 
-#[derive(Debug, Deserialize)]
-pub struct BundleHash {}
+pub type BundleHash = H256;
 
 #[derive(Debug, Deserialize, Serialize, Clone, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct SendBundleResponse {
-    pub bundle_hash: B256,
+    pub bundle_hash: H256,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, Default)]

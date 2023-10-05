@@ -1,4 +1,3 @@
-use alloy_primitives::B256;
 use async_trait::async_trait;
 use jsonrpsee::server::{Server, ServerHandle};
 use jsonrpsee_core::RpcResult;
@@ -8,7 +7,7 @@ use tracing::info;
 use super::{
     api::MevShareApiServer,
     metrics::RpcServerMetrics,
-    types::{Bundle, CancelBundleResponse, SendBundleResponse, SimulateBundleResponse},
+    types::{Bundle, BundleHash, CancelBundleResponse, SendBundleResponse, SimulateBundleResponse},
 };
 
 #[derive(Debug)]
@@ -41,7 +40,10 @@ impl MevShareApiServer for RpcServer {
     async fn simulate_bundle(&self, bundle: Bundle) -> RpcResult<SimulateBundleResponse> {
         Ok(SimulateBundleResponse::default())
     }
-    async fn cancel_bundle_by_hash(&self, bundle_hash: B256) -> RpcResult<CancelBundleResponse> {
+    async fn cancel_bundle_by_hash(
+        &self,
+        bundle_hash: BundleHash,
+    ) -> RpcResult<CancelBundleResponse> {
         Ok(CancelBundleResponse::default())
     }
 }

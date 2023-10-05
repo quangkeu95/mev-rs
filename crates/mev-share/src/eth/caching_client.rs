@@ -4,13 +4,10 @@ use ethers::{
     providers::{JsonRpcClient, Middleware, Provider},
     types::{Block, BlockNumber, H256},
 };
-use lazy_static::lazy_static;
 use moka::sync::Cache;
 use std::time::Duration;
 
-lazy_static! {
-    static ref BLOCK_CACHE_DURATION: Duration = Duration::from_secs(5);
-}
+pub const BLOCK_CACHE_DURATION: Duration = Duration::from_secs(5);
 
 pub struct EthCachingClient<P> {
     provider: Provider<P>,
@@ -19,7 +16,7 @@ pub struct EthCachingClient<P> {
 
 impl<P: JsonRpcClient> EthCachingClient<P> {
     pub fn new(provider: Provider<P>) -> Self {
-        let block_cache = Cache::builder().time_to_live(*BLOCK_CACHE_DURATION).build();
+        let block_cache = Cache::builder().time_to_live(BLOCK_CACHE_DURATION).build();
         Self {
             provider,
             block_cache,
