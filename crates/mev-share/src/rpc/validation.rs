@@ -2,24 +2,28 @@ use ethers::signers::Signer;
 use ethers::types::H256;
 use thiserror::Error;
 
-use crate::constants::{MAX_BLOCK_OFFSET, MAX_BLOCK_RANGE, MAX_NESTING_LEVEL};
+use crate::{
+    constants::{MAX_BLOCK_OFFSET, MAX_BLOCK_RANGE, MAX_BODY_SIZE, MAX_NESTING_LEVEL},
+    utils::{decode_signed_tx, merge_inclusion_intervals, merge_privacy_builders},
+};
 
-use super::types::Bundle;
+use super::types::{Bundle, BundleInclusion};
 
 #[derive(Debug, Default)]
 pub struct BundleValidation {
     pub hash: H256,
+    pub txs: u64,
     pub unmatched: bool,
 }
 
 pub fn validate_bundle<S>(
     level: u16,
-    bundle: &Bundle,
+    bundle: &mut Bundle,
     current_block_number: u64,
     signer: S,
 ) -> Result<BundleValidation, BundleValidationError>
 where
-    S: Signer,
+    S: Signer + Clone,
 {
     if level > MAX_NESTING_LEVEL {
         return Err(BundleValidationError::BundleTooDeep);
@@ -63,11 +67,12 @@ where
         return Err(BundleValidationError::InvalidBundleBodySize);
     }
 
-    let mut txs = 0;
+    let mut txs: u64 = 0;
     let mut body_hashes: Vec<H256> = vec![];
     let mut unmatched = false;
+    let bundle_body_len = bundle.body.len();
 
-    for (i, body) in bundle.body.iter().enumerate() {
+    for (i, body) in bundle.body.iter_mut().enumerate() {
         if let Some(tx_hash) = &body.hash {
             // make sure that we have up to one unmatched element and only at the beginning of the body
             if unmatched || i > 0 {
@@ -77,15 +82,48 @@ where
             }
             unmatched = true;
             body_hashes.push(tx_hash.clone());
-            if bundle.body.len() == 1 {
+            if bundle_body_len == 1 {
                 // we have unmatched bundle without anything else
                 return Err(BundleValidationError::InvalidBundleBody(
                     "bundle body with single unmatched item".to_string(),
                 ));
             }
             txs += 1;
-        } else if let Some(bundle_body) = &body.bundle {
+        } else if let Some(tx_raw) = &body.tx {
+            let (signed_tx, sig) = decode_signed_tx(tx_raw)
+                .map_err(|e| BundleValidationError::InvalidBundleBody(e.to_string()))?;
+            let tx_hash = signed_tx.hash(&sig);
+            body_hashes.push(tx_hash);
+            txs += 1;
+        } else if let Some(inner_bundle) = &mut body.bundle {
+            merge_inclusion_intervals(&mut bundle.inclusion, &inner_bundle.inclusion)
+                .map_err(|e| BundleValidationError::InvalidInclusion(e.to_string()))?;
+
+            merge_privacy_builders(bundle.privacy.as_mut(), inner_bundle.privacy.as_ref());
+
+            let inner_bundle_validation = validate_bundle(
+                level + 1,
+                inner_bundle,
+                current_block_number,
+                signer.clone(),
+            )?;
+            body_hashes.push(inner_bundle_validation.hash);
+            txs += inner_bundle_validation.txs;
+
+            // don't allow unmatched bundles below 1-st level
+            if inner_bundle_validation.unmatched {
+                return Err(BundleValidationError::InvalidBundleBody(
+                    "inner bundle unmatched".to_string(),
+                ));
+            }
         }
+    }
+
+    if txs > MAX_BODY_SIZE {
+        return Err(BundleValidationError::InvalidBundleBodySize);
+    }
+    if body_hashes.len() == 1 {
+        // special case of bundle with a single tx
     }
 
     Ok(BundleValidation::default())

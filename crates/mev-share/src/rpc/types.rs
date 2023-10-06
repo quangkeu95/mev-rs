@@ -85,7 +85,7 @@ pub struct BundleMetadata {
     pub received_at: u64,
 }
 
-#[derive(Debug, Deserialize, strum::Display)]
+#[derive(Debug, Deserialize, Clone, strum::Display)]
 #[cfg_attr(feature = "client", derive(Serialize))]
 #[strum(serialize_all = "snake_case")]
 pub enum Hint {
