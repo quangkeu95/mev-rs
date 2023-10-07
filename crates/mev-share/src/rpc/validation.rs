@@ -1,5 +1,8 @@
-use ethers::signers::Signer;
+use std::collections::HashSet;
+
 use ethers::types::H256;
+use ethers::utils::keccak256;
+use ethers::{signers::Signer, types::Bytes};
 use thiserror::Error;
 
 use crate::{
@@ -7,13 +10,23 @@ use crate::{
     utils::{decode_signed_tx, merge_inclusion_intervals, merge_privacy_builders},
 };
 
-use super::types::{Bundle, BundleInclusion};
+use super::types::{Bundle, BundleInclusion, Hint};
 
 #[derive(Debug, Default)]
 pub struct BundleValidation {
     pub hash: H256,
     pub txs: u64,
     pub unmatched: bool,
+}
+
+impl BundleValidation {
+    pub fn new(hash: H256, txs: u64, unmatched: bool) -> Self {
+        Self {
+            hash,
+            txs,
+            unmatched,
+        }
+    }
 }
 
 pub fn validate_bundle<S>(
@@ -36,12 +49,7 @@ where
 
     // validate inclusion
     let min_block = bundle.inclusion.block;
-    let max_block =
-        if bundle.inclusion.max_block.is_some() && bundle.inclusion.max_block.unwrap() > 0 {
-            bundle.inclusion.max_block.unwrap()
-        } else {
-            bundle.inclusion.block
-        };
+    let max_block = bundle.inclusion.max_block.unwrap_or(bundle.inclusion.block);
 
     if max_block < min_block {
         return Err(BundleValidationError::InvalidInclusion(
@@ -122,11 +130,82 @@ where
     if txs > MAX_BODY_SIZE {
         return Err(BundleValidationError::InvalidBundleBodySize);
     }
-    if body_hashes.len() == 1 {
+
+    let hash = if body_hashes.len() == 1 {
         // special case of bundle with a single tx
+        body_hashes[0]
+    } else {
+        let concat_hashes = body_hashes.iter().fold(Bytes::new(), |acc, item| {
+            let item: Bytes = item.clone().to_fixed_bytes().into();
+            [acc, item].concat().into()
+        });
+
+        let h = keccak256(concat_hashes);
+        H256::from(h)
+    };
+
+    // validate validity
+    if unmatched && bundle.validity.refund.len() > 0 {
+        // refunds should be empty for unmatched bundles
+        return Err(BundleValidationError::InvalidBundleConstraints);
     }
 
-    Ok(BundleValidation::default())
+    let total_refund_config_percent = bundle
+        .validity
+        .refund_config
+        .iter()
+        .map(|refund_config| {
+            if refund_config.percent > 100 {
+                Err(BundleValidationError::InvalidBundleConstraints)
+            } else {
+                Ok(refund_config.percent)
+            }
+        })
+        .sum::<Result<u64, BundleValidationError>>()?;
+
+    if total_refund_config_percent > 100 {
+        return Err(BundleValidationError::InvalidBundleConstraints);
+    }
+
+    let mut user_body_pos: HashSet<u64> = HashSet::new();
+    let mut total_percent = 0u64;
+
+    for refund_constraint in bundle.validity.refund.iter() {
+        if refund_constraint.body_idx >= bundle.body.len() as u64 {
+            return Err(BundleValidationError::InvalidBundleConstraints);
+        }
+        if user_body_pos.contains(&refund_constraint.body_idx) {
+            return Err(BundleValidationError::InvalidBundleConstraints);
+        }
+        user_body_pos.insert(refund_constraint.body_idx);
+
+        if refund_constraint.percent > 100 {
+            return Err(BundleValidationError::InvalidBundleConstraints);
+        }
+        total_percent += refund_constraint.percent;
+    }
+
+    if total_percent > 100 {
+        return Err(BundleValidationError::InvalidBundleConstraints);
+    }
+
+    if unmatched && bundle.privacy.is_some() && !bundle.privacy.as_ref().unwrap().hints.is_empty() {
+        return Err(BundleValidationError::InvalidBundlePrivacy);
+    }
+
+    if let Some(privacy) = &mut bundle.privacy {
+        if privacy.hints.len() > 0 {
+            privacy.hints.push(Hint::Hash);
+        }
+        if privacy.want_refund < 0 || privacy.want_refund > 100 {
+            return Err(BundleValidationError::InvalidBundlePrivacy);
+        }
+    }
+
+    // clean metadata
+    bundle.metadata = None;
+
+    Ok(BundleValidation::new(hash, txs, unmatched))
 }
 
 #[derive(Debug, Error)]
@@ -141,4 +220,8 @@ pub enum BundleValidationError {
     InvalidBundleBodySize,
     #[error("invalid bundle body: {0}")]
     InvalidBundleBody(String),
+    #[error("invalid bundle constraints")]
+    InvalidBundleConstraints,
+    #[error("invalid bundle privacy")]
+    InvalidBundlePrivacy,
 }

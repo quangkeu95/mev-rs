@@ -72,9 +72,10 @@ pub struct BundlePrivacy {
     pub hints: Vec<Hint>,
     /// Builders that have permission to receive this bundle and include it in a block.
     pub builders: Vec<String>,
+    pub want_refund: i64,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Default, Deserialize)]
 #[cfg_attr(feature = "client", derive(Serialize))]
 #[serde(rename_all = "camelCase")]
 pub struct BundleMetadata {
