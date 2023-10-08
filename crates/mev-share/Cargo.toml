@@ -1,0 +1,36 @@
+[package]
+name = "mev-share"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+description = """
+MEV Share node implementation
+"""
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true, features = ["env-filter", "fmt"] }
+tokio = { workspace = true }
+anyhow = { workspace = true }
+derive_more = { workspace =true }
+thiserror = { workspace = true }
+async-trait = { workspace = true }
+jsonrpsee = { workspace = true, features = ["server", "macros"]}
+jsonrpsee-core = { workspace = true }
+serde = { workspace = true }
+# alloy-primitives = { workspace = true, features = ["serde"] }
+ethers = { workspace = true }
+strum = { workspace = true }
+lazy_static = { workspace = true }
+
+clap = { version = "4.4.5", features = ["derive", "env"]}
+redis = { version = "0.23.3" , features = ["tokio-comp"]}
+moka = { version = "0.12.1", features = ["sync"] }
+
+[features]
+client = ["jsonrpsee/client", "jsonrpsee/async-client"]
